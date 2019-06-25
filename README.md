@@ -1,7 +1,9 @@
 # PyAppsFlyer
 
 Unofficial python erapper for AppsFlyer API.
+
 https://www.appsflyer.com/
+
 ---
 
 For working with this application you need to receive API_KEY in your
@@ -65,16 +67,15 @@ folder, or it would not be read. Do not put env file inside src folder.
 
 Upon application start this file will be loaded and all additional parameters will be used.
 
-APP_FLYER_HOST  - host of an AppsFlyer API.
-APP_FLYER_API_KEY = AppsFlyer API KEY.
+* APP_FLYER_HOST  - host of an AppsFlyer API.
+* APP_FLYER_API_KEY = AppsFlyer API KEY.
 
-DEFAULT_DAYS_NUMBER = Number of days for timedelta. 
-                      Application will try to receive all info for previous days, shown here. 
-DEFAULT_TIMEZONE - default timezone is Europe/Moscow, could be changed. From API docs.
-DEFAULT_CSV_DELIMETER - default csv files delimeter. From API docs.
-DEFAULT_CSV_QUOTECHAR - default quotechar delimeter. From API docs.
-DEFAULT_CSV_ENCODING - default encoding is UTF-8-SIG. From API docs.
-
+* DEFAULT_DAYS_NUMBER = Number of days for timedelta.
+                      Application will try to receive all info for previous days, shown here.
+* DEFAULT_TIMEZONE - default timezone is Europe/Moscow, could be changed. From API docs.
+* DEFAULT_CSV_DELIMETER - default csv files delimeter. From API docs.
+* DEFAULT_CSV_QUOTECHAR - default quotechar delimeter. From API docs.
+* DEFAULT_CSV_ENCODING - default encoding is UTF-8-SIG. From API docs.
 
 If you want to receive other variants of reports there two classes.
 RawDataReport and TargetingValidationRulesReport
