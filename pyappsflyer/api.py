@@ -80,6 +80,8 @@ class RawDataReport(BaseAppsFlyer):
     report_names = (
         'installs_report',
         'in_app_events_report',
+        'organic_installs_report',
+        'organic_in_app_events_report',
     ) + special_report_names
 
     report_with_retargeting = (
