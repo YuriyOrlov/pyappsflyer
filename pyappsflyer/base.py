@@ -149,3 +149,9 @@ class BaseAppsFlyer:
         to_date = datetime.now().strftime("%Y-%m-%d")
 
         return from_date, to_date
+
+    def do_reports_exclusion(self, report_names, exclude_reports):
+        return [
+            report_name for report_name in report_names
+            if report_name not in exclude_reports
+        ]

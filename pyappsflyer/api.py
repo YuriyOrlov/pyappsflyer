@@ -1,5 +1,6 @@
 import logging
 
+from typing import Optional
 from logging.config import dictConfig
 from .base import BaseAppsFlyer
 
@@ -49,10 +50,15 @@ class PerformanceReport(BaseAppsFlyer):
                              return_dict=return_dict)
 
     def get_reports(self,
+                    exclude_reports=None,
                     *args,
                     **kwargs):
 
         all_reports = list()
+
+        if bool(exclude_reports):
+            self.report_names = self.do_reports_exclusion(self.report_names,
+                                                          exclude_reports)
 
         for report_name in self.report_names:
             all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
@@ -122,10 +128,20 @@ class RawDataReport(BaseAppsFlyer):
                              return_dict=return_dict)
 
     def get_reports(self,
+                    exclude_reports: Optional[list] = None,
+                    exclude_retargeting_reports: Optional[list] = None,
                     *args,
                     **kwargs):
 
         all_reports = list()
+
+        if bool(exclude_reports):
+            self.report_names = self.do_reports_exclusion(self.report_names,
+                                                          exclude_reports)
+
+        if bool(exclude_retargeting_reports):
+            self.report_names = self.do_reports_exclusion(self.report_with_retargeting,
+                                                          exclude_retargeting_reports)
 
         for report_name in self.report_names:
             if report_name in self.report_with_retargeting:
@@ -181,10 +197,14 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                              return_dict=return_dict)
 
     def get_reports(self,
+                    exclude_reports: Optional[list] = None,
                     *args,
                     **kwargs):
 
         all_reports = list()
+
+        if bool(exclude_reports):
+            self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
 
         for report_name in self.report_names:
             all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})

@@ -106,3 +106,8 @@ ENV/
 
 # CSV
 *.csv
+
+# Setuptools
+*setup.py
+*.whl
+*.gz
