@@ -1,12 +1,15 @@
+import os
+import datetime
 import logging
 import csv
+import json
 import requests
 
 from typing import Optional
+from uuid import uuid4
 from logging.config import dictConfig
 from contextlib import closing
 from codecs import iterdecode
-from datetime import datetime, timedelta
 from furl import furl
 
 from .settings import LOGGING, DEFAULT_DAYS_NUMBER,\
@@ -16,6 +19,27 @@ from .settings import LOGGING, DEFAULT_DAYS_NUMBER,\
 dictConfig(LOGGING)
 
 logger = logging.getLogger(__name__)
+
+
+def get_random_filename(filename=None,
+                        folder=None,
+                        add_current_date=True,
+                        ext='csv'):
+    if filename:
+        _, ext = os.path.splitext(filename)
+        filename = f"{str(uuid4())}{ext}"
+    else:
+        filename = f"{str(uuid4())}{ext}"
+
+    components = list()
+    if folder:
+        components = components.append(folder)
+
+    if add_current_date:
+        components.append(datetime.date.today().strftime("%Y/%m/%d"))
+    components.append(filename)
+
+    return os.path.join(*components)
 
 
 class BaseAppsFlyer:
@@ -67,12 +91,31 @@ class BaseAppsFlyer:
         if '<!DOCTYPE html>' in value:
             raise Exception('Error data received. Check API KEY')
 
-    def _read_csv_file(self, reader, result):
+    def _read_csv_file(self,
+                       reader,
+                       result,
+                       to_json=False,
+                       filename=None):
+
         for num, record in enumerate(reader):
             if num == 0:
                 self._validate_csv_request_answer(record)
             result.append(record)
+        if to_json:
+            if not filename:
+                filename = get_random_filename(filename)
+            with open(filename, 'w+') as file:
+                json.dump(result, file)
+                return list()
         return result
+
+    def _write_csv_file(self, reader, filename):
+        with open(filename, 'w+') as file:
+            writer = csv.writer(file)
+            for num, record in enumerate(reader):
+                if num == 0:
+                    self._validate_csv_request_answer(record)
+                writer.writerow(record)
 
     def _get(self, **kwargs):
         url = self._prepare_url(**kwargs)
@@ -101,10 +144,15 @@ class BaseAppsFlyer:
                 else:
                     reader = csv.reader(iterdecode(receiver.iter_lines(),
                                                    encoding=encoding),
-                                        delimiter=delimeter, quotechar=quotechar)
-
+                                                   delimiter=delimeter,
+                                                   quotechar=quotechar)
+            if kwargs.get('to_csv'):
+                filename = get_random_filename(filename=kwargs.get('filename'))
+                self._write_csv_file(reader, filename)
+            else:
                 result = self._read_csv_file(reader=reader,
-                                             result=result)
+                                             result=result,
+                                             **kwargs)
 
         except Exception as err:
             logger.exception(err)
@@ -126,7 +174,7 @@ class BaseAppsFlyer:
         if not value:
             return None
         try:
-            datetime.strptime(value, "%Y-%m-%d")
+            datetime.datetime.strptime(value, "%Y-%m-%d")
             return value
         except (ValueError, TypeError) as err:
             logger.warning(err)
@@ -145,8 +193,8 @@ class BaseAppsFlyer:
         return api_report_name, from_date, to_date
 
     def get_default_dates(self):
-        from_date = (datetime.now() - timedelta(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
-        to_date = datetime.now().strftime("%Y-%m-%d")
+        from_date = (datetime.datetime.now() - datetime.timedelta(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
+        to_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         return from_date, to_date
 
