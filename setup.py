@@ -11,7 +11,7 @@ setup(name='pyappsflyer',
       url='https://github.com/YuriyOrlov/pyappsflyer',
       author='Yuriy Orlov',
       author_email='navuchodonsr@yandex.ru',
-      license='MIT',
+      license='GPL-3',
       packages=['pyappsflyer'],
       install_requires=[
           'furl==2.0.0',
