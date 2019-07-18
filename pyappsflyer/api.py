@@ -74,7 +74,7 @@ class RawDataReport(BaseAppsFlyer):
     ) + additional_fields_uninstall_query
 
     special_report_names = (
-        'uninstall_events_reports',
+        'uninstall_events_report',
     )
 
     report_names = (
