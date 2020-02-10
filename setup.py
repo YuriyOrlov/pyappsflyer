@@ -17,6 +17,7 @@ setup(name='pyappsflyer',
           'furl==2.0.0',
           'environs==4.2.0',
           'requests==2.22.0',
-          'xmltodict==0.12.0'
+          'xmltodict==0.12.0',
+          'pytest==5.3.5'
       ],
       zip_safe=False)

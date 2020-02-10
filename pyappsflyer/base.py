@@ -154,6 +154,21 @@ class BaseAppsFlyer:
             return result
 
     def get_report(self):
+        """
+        Main method for receiving reports.
+        """
+        try:
+            self._get_report()
+        except Exception as err:
+            raise PyAFUnknownError(
+                'Unknown error'
+            ) from err
+
+    def _get_report(self):
+        """
+        Method to be reassgned in child classes.
+        :return:
+        """
         pass
 
     def get_reports(self):
@@ -193,7 +208,7 @@ class BaseAppsFlyer:
         self.validate_date_format(to_date)
 
     @staticmethod
-    def get_default_dates() -> Tuple[datetime, datetime]:
+    def get_default_dates() -> Tuple[datetime.datetime, datetime.datetime]:
         """
         Method returns default values for dates if no dates were transferred.
         :return: tuple with two dates
@@ -203,7 +218,7 @@ class BaseAppsFlyer:
         return from_date, to_date
 
     @staticmethod
-    def do_reports_exclusion(report_names: List[str], exclude_reports: List[str]) -> List[str]:
+    def do_reports_exclusion(report_names: List[str], exclude_reports: Tuple[str]) -> List[str]:
         """
         Reports to be excluded, if they are not needed in query to an AppsFlyer API.
 
