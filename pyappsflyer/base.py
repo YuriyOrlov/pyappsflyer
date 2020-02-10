@@ -208,7 +208,7 @@ class BaseAppsFlyer:
         self.validate_date_format(to_date)
 
     @staticmethod
-    def get_default_dates() -> Tuple[datetime.datetime, datetime.datetime]:
+    def get_default_dates() -> Tuple[str, str]:
         """
         Method returns default values for dates if no dates were transferred.
         :return: tuple with two dates
