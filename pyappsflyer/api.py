@@ -35,10 +35,7 @@ class PerformanceReport(BaseAppsFlyer):
         :param return_dict: return answer in dict or list
         :return: Ordered dictionary created from CSV file or list created from CSV file
         """
-        api_report_name, from_date, to_date = self.validate_dates_and_report_names(api_report_name,
-                                                                                   self.report_names,
-                                                                                   from_date,
-                                                                                   to_date)
+        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:
@@ -104,10 +101,7 @@ class RawDataReport(BaseAppsFlyer):
                    retargeting=False,
                    different_additional_fields=False
                    ):
-        api_report_name, from_date, to_date = self.validate_dates_and_report_names(api_report_name,
-                                                                                   self.report_names,
-                                                                                   from_date,
-                                                                                   to_date)
+        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:
@@ -179,10 +173,7 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                    api_report_name="invalid_installs_report",
                    return_dict=True
                    ):
-        api_report_name, from_date, to_date = self.validate_dates_and_report_names(api_report_name,
-                                                                                   self.report_names,
-                                                                                   from_date,
-                                                                                   to_date)
+        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:
@@ -201,7 +192,7 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                     *args,
                     **kwargs):
 
-        all_reports = list()
+        all_reports = []
 
         if bool(exclude_reports):
             self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)

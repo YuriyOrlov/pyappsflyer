@@ -1,6 +1,6 @@
 import os
-import sys
 import environs
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +34,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'level': 'DEBUG',
             'formatter': 'simple',
-            'stream': sys.stdout,
+            'stream': 'ext://sys.stdout'
         },
     },
     'loggers': {
