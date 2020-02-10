@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional
+from typing import Optional, List
 from logging.config import dictConfig
 from .base import BaseAppsFlyer
 
@@ -18,12 +18,12 @@ class PerformanceReport(BaseAppsFlyer):
         'daily_report', 'geo_report', 'geo_by_date_report'
     )
 
-    def get_report(self,
-                   from_date=None,
-                   to_date=None,
-                   timezone=DEFAULT_TIMEZONE,
-                   api_report_name="partners_report",
-                   return_dict=True):
+    def _get_report(self,
+                    from_date=None,
+                    to_date=None,
+                    timezone=DEFAULT_TIMEZONE,
+                    api_report_name="partners_report",
+                    return_dict=True):
         """
         Method to receive one performance report.
         If dates are not presented default number of days will be used.
@@ -58,7 +58,7 @@ class PerformanceReport(BaseAppsFlyer):
                                                           exclude_reports)
 
         for report_name in self.report_names:
-            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
+            all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
 
         return all_reports
 
@@ -92,15 +92,14 @@ class RawDataReport(BaseAppsFlyer):
         'in_app_events_report'
     )
 
-    def get_report(self,
-                   from_date=None,
-                   to_date=None,
-                   timezone=DEFAULT_TIMEZONE,
-                   api_report_name="installs_report",
-                   return_dict=True,
-                   retargeting=False,
-                   different_additional_fields=False
-                   ):
+    def _get_report(self,
+                    from_date=None,
+                    to_date=None,
+                    timezone=DEFAULT_TIMEZONE,
+                    api_report_name="installs_report",
+                    return_dict=True,
+                    retargeting=False,
+                    different_additional_fields=False):
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
@@ -122,33 +121,33 @@ class RawDataReport(BaseAppsFlyer):
                              return_dict=return_dict)
 
     def get_reports(self,
-                    exclude_reports: Optional[list] = None,
-                    exclude_retargeting_reports: Optional[list] = None,
+                    exclude_reports: Optional[List[str]] = None,
+                    exclude_retargeting_reports: Optional[tuple] = None,
                     *args,
                     **kwargs):
 
         all_reports = list()
 
-        if bool(exclude_reports):
+        if exclude_reports:
             self.report_names = self.do_reports_exclusion(self.report_names,
                                                           exclude_reports)
 
-        if bool(exclude_retargeting_reports):
+        if exclude_retargeting_reports:
             self.report_names = self.do_reports_exclusion(self.report_with_retargeting,
                                                           exclude_retargeting_reports)
 
         for report_name in self.report_names:
             if report_name in self.report_with_retargeting:
-                all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
-                all_reports.append({f"{report_name}_retargeting": self.get_report(api_report_name=report_name,
-                                                                                  retargeting=True,
-                                                                                  *args, **kwargs)})
+                all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
+                all_reports.append({f"{report_name}_retargeting": self._get_report(api_report_name=report_name,
+                                                                                   retargeting=True,
+                                                                                   *args, **kwargs)})
             elif report_name in self.special_report_names:
-                all_reports.append({report_name: self.get_report(api_report_name=report_name,
-                                                                 different_additional_fields=True,
-                                                                 *args, **kwargs)})
+                all_reports.append({report_name: self._get_report(api_report_name=report_name,
+                                                                  different_additional_fields=True,
+                                                                  *args, **kwargs)})
             else:
-                all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
+                all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
         return all_reports
 
 
@@ -166,13 +165,12 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
         'invalid_in_app_events_report'
     )
 
-    def get_report(self,
-                   from_date=None,
-                   to_date=None,
-                   timezone=DEFAULT_TIMEZONE,
-                   api_report_name="invalid_installs_report",
-                   return_dict=True
-                   ):
+    def _get_report(self,
+                    from_date=None,
+                    to_date=None,
+                    timezone=DEFAULT_TIMEZONE,
+                    api_report_name="invalid_installs_report",
+                    return_dict=True):
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
@@ -198,6 +196,6 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
             self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
 
         for report_name in self.report_names:
-            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
+            all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
 
         return all_reports
