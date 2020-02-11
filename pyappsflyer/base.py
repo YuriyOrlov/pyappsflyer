@@ -13,8 +13,7 @@ from contextlib import closing
 from codecs import iterdecode
 from furl import furl
 
-from .settings import DEFAULT_DAYS_NUMBER,\
-    DEFAULT_CSV_DELIMETER, DEFAULT_CSV_QUOTECHAR, DEFAULT_CSV_ENCODING,\
+from .settings import DEFAULT_DAYS_NUMBER, DEFAULT_CSV_ENCODING,\
     APP_FLYER_HOST, APP_FLYER_API_KEY, FILES_DIR, PLATFORM
 
 from .exceptions import PyAFValidationError,\
@@ -186,18 +185,18 @@ class BaseAppsFlyer:
         finally:
             return result
 
-    def get_report(self):
+    def get_report(self, *args, **kwargs):
         """
         Main method for receiving reports.
         """
         try:
-            self._get_report()
+            return self._get_report(*args, **kwargs)
         except Exception as err:
             raise PyAFUnknownError(
                 'Unknown error'
             ) from err
 
-    def _get_report(self):
+    def _get_report(self, *args, **kwargs):
         """
         Method to be reassgned in child classes.
         :return:

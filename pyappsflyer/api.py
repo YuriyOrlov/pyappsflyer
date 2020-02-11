@@ -2,8 +2,8 @@ import logging
 
 from typing import Optional, List
 from logging.config import dictConfig
-from .base import BaseAppsFlyer
 
+from .base import BaseAppsFlyer
 from .settings import LOGGING, DEFAULT_TIMEZONE
 
 dictConfig(LOGGING)
@@ -41,8 +41,7 @@ class PerformanceReport(BaseAppsFlyer):
 
         return self._get_csv(request_args={"from": from_date,
                                            "to": to_date,
-                                           "timezone": timezone}
-                             )
+                                           "timezone": timezone})
 
     def get_reports(self,
                     exclude_reports=None,
@@ -51,7 +50,7 @@ class PerformanceReport(BaseAppsFlyer):
 
         all_reports = list()
 
-        if bool(exclude_reports):
+        if exclude_reports:
             self.report_names = self.do_reports_exclusion(self.report_names,
                                                           exclude_reports)
 
@@ -186,7 +185,7 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
 
         all_reports = []
 
-        if bool(exclude_reports):
+        if exclude_reports:
             self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
 
         for report_name in self.report_names:
