@@ -40,7 +40,9 @@ class PerformanceReport(BaseAppsFlyer):
 
         return self._get_csv(request_args={"from": from_date,
                                            "to": to_date,
-                                           "timezone": timezone})
+                                           "timezone": timezone},
+                             copy_to_csv=copy_to_csv,
+                             copy_to_json=copy_to_json)
 
 
 class TargetingValidationRulesReport(BaseAppsFlyer):
@@ -90,7 +92,9 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                         "timezone": timezone,
                         "additional_fields": ",".join(self.additional_fields)}
 
-        return self._get_csv(request_args=request_args)
+        return self._get_csv(request_args=request_args,
+                             copy_to_csv=copy_to_csv,
+                             copy_to_json=copy_to_json)
 
 
 class RawDataReport(BaseAppsFlyer):
@@ -166,7 +170,9 @@ class RawDataReport(BaseAppsFlyer):
         if retargeting:
             request_args.update({"reattr": "true"})
 
-        return self._get_csv(request_args=request_args)
+        return self._get_csv(request_args=request_args,
+                             copy_to_csv=copy_to_csv,
+                             copy_to_json=copy_to_json)
 
     def get_reports(self,
                     exclude_reports: Optional[Tuple[str, ...]] = None,

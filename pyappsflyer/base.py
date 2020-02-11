@@ -176,9 +176,10 @@ class BaseAppsFlyer:
                 # Converts received CSV into list
                 result = self._read_csv_file(reader=reader, result=result)
 
-            if kwargs.get('to_csv'):
+            # Saves file copies in different formats if needed
+            if kwargs['copy_to_csv']:
                 self.write_file(result, filename)
-            elif kwargs.get('to_json'):
+            if kwargs['copy_to_json']:
                 self.write_file(result, filename, 'json')
 
         except Exception as err:
