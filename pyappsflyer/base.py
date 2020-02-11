@@ -9,7 +9,7 @@ from abc import abstractmethod
 from datetime import datetime as dt
 from datetime import timedelta as tdl
 from datetime import date
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, Generator
 from uuid import uuid4
 from contextlib import closing
 from codecs import iterdecode
@@ -78,7 +78,7 @@ class BaseAppsFlyer:
 
     __slots__ = ('logger', 'api_url', 'api_action',
                  'application_name', 'api_report_name',
-                 'api_version', 'api_key')
+                 'api_version', 'api_key', 'report_names')
 
     def __init__(self,
                  application_name: str,
@@ -92,6 +92,7 @@ class BaseAppsFlyer:
         self.api_report_name = None
         self.api_version = 'v5'
         self.api_key = api_key or APP_FLYER_API_KEY
+        self.report_names = None
 
     def _prepare_url(self, **kwargs) -> furl:
         """
@@ -206,13 +207,25 @@ class BaseAppsFlyer:
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def get_reports(self):
+    def get_reports(self,
+                    exclude_reports: Optional[Tuple[str, ...]] = None,
+                    *args,
+                    **kwargs) -> list:
         """
-        Method to receive all base reports.
-        Must be assigned in child classes.
+        Method to receive all reports
+
+        :param exclude_reports: an array with names of reports needs to be excluded in string format
+        :return: list with results
         """
-        raise NotImplementedError
+        all_reports = []
+
+        if exclude_reports:
+            self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
+
+        for report_name in self.report_names:
+            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
+
+        return all_reports
 
     def validate_date_format(self, value: str) -> None:
         """
@@ -231,7 +244,7 @@ class BaseAppsFlyer:
 
     def validate_dates_and_report_names(self,
                                         api_report_name: str,
-                                        allowed_report_names: List[str],
+                                        allowed_report_names: Tuple[str, ...],
                                         from_date: str,
                                         to_date: str) -> None:
         """
@@ -258,7 +271,7 @@ class BaseAppsFlyer:
         return from_date, to_date
 
     @staticmethod
-    def do_reports_exclusion(report_names: List[str], exclude_reports: Tuple[str]) -> List[str]:
+    def do_reports_exclusion(report_names: Tuple[str, ...], exclude_reports: Tuple[str, ...]) -> Generator:
         """
         Reports to be excluded, if they are not needed in query to an AppsFlyer API.
 
@@ -266,13 +279,13 @@ class BaseAppsFlyer:
         :param exclude_reports: report names, which must be excluded
         :return: an array of strings with report names
         """
-        return [
+        return (
             report_name for report_name in report_names
             if report_name not in exclude_reports
-        ]
+        )
 
     @staticmethod
-    def validate_report_name(value, report_names: List[str]) -> List[str]:
+    def validate_report_name(value, report_names: Tuple[str, ...]) -> str:
         """
         Method validates that such report is in reports list
         which user could receive.

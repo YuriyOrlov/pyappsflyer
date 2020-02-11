@@ -13,10 +13,10 @@ from pyappsflyer.exceptions import PyAFError, PyAFValidationError,\
 from unittest.mock import patch
 from io import StringIO
 
-sample_report_names = [
+sample_report_names = (
         'partners_report', 'partners_by_date_report',
         'daily_report', 'geo_report', 'geo_by_date_report'
-    ]
+    )
 
 csv_example = StringIO("""
     test_column1,test_column2,test_column3
@@ -98,6 +98,12 @@ class TestBase:
         filename_w_path = get_random_filename(filename=test_filename)
         assert 'csv' in filename_w_path
         assert '.ggg' not in filename_w_path.lower()
+
+    def test_reports_exclusion(self, baseappclass: BaseAppsFlyer):
+        report_names_to_exclude = ('partners_report', 'partners_by_date_report')
+        result_gen = baseappclass.do_reports_exclusion(sample_report_names, report_names_to_exclude)
+
+        assert len(list(result_gen)) == 3
 
     # @patch('requests.get', MagicMock(return_value=csv_example))
     # def test_receiving_csv_file(self, baseappclass: BaseAppsFlyer):
