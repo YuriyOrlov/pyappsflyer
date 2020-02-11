@@ -2,14 +2,13 @@ import os
 import re
 import pytest
 
-from pyappsflyer.base import BaseAppsFlyer
+from pyappsflyer import BaseAppsFlyer, get_random_filename
 
 from unittest.mock import patch, MagicMock
 
 from pyappsflyer.exceptions import PyAFError, PyAFValidationError,\
     PyAFCommunicationError, PyAFUnknownError, WebServerError,\
     AuthenticationError, PyAFProcessingError
-from pyappsflyer.base import get_random_filename
 
 from unittest.mock import patch
 from io import StringIO
@@ -89,16 +88,16 @@ class TestBase:
         uuid = get_uuid.group(0)
         filename = f'{uuid}.csv'
         assert filename in filename_w_path
-        assert path_to_check.lower() in filename_w_path
+        assert path_to_check.lower() in filename_w_path.lower()
 
         test_filename = 'some_filename.csv'
         filename_w_path = get_random_filename(filename=test_filename)
-        assert test_filename in filename_w_path
+        assert test_filename in filename_w_path.lower()
 
         test_filename = 'some_filename.ggg'
         filename_w_path = get_random_filename(filename=test_filename)
         assert 'csv' in filename_w_path
-        assert '.ggg' not in filename_w_path
+        assert '.ggg' not in filename_w_path.lower()
 
     # @patch('requests.get', MagicMock(return_value=csv_example))
     # def test_receiving_csv_file(self, baseappclass: BaseAppsFlyer):

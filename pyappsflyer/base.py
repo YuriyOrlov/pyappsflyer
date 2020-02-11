@@ -4,6 +4,8 @@ import csv
 import json
 import requests
 
+
+from abc import abstractmethod
 from datetime import datetime as dt
 from datetime import timedelta as tdl
 from datetime import date
@@ -196,19 +198,25 @@ class BaseAppsFlyer:
                 'Unknown error'
             ) from err
 
+    @abstractmethod
     def _get_report(self, *args, **kwargs):
         """
-        Method to be reassgned in child classes.
-        :return:
+        Method to receive base report.
+        Must be assigned in child classes.
         """
-        pass
+        raise NotImplementedError
 
+    @abstractmethod
     def get_reports(self):
-        pass
+        """
+        Method to receive all base reports.
+        Must be assigned in child classes.
+        """
+        raise NotImplementedError
 
     def validate_date_format(self, value: str) -> None:
         """
-        Method checks id data format is invalid.
+        Method checks if data format is invalid.
 
         :param value: date as a string
         """

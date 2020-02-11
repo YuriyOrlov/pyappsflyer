@@ -55,7 +55,7 @@ class PerformanceReport(BaseAppsFlyer):
                                                           exclude_reports)
 
         for report_name in self.report_names:
-            all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
+            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
 
         return all_reports
 
@@ -133,16 +133,16 @@ class RawDataReport(BaseAppsFlyer):
 
         for report_name in self.report_names:
             if report_name in self.report_with_retargeting:
-                all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
+                all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
                 all_reports.append({f"{report_name}_retargeting": self._get_report(api_report_name=report_name,
                                                                                    retargeting=True,
                                                                                    *args, **kwargs)})
             elif report_name in self.special_report_names:
-                all_reports.append({report_name: self._get_report(api_report_name=report_name,
+                all_reports.append({report_name: self.get_report(api_report_name=report_name,
                                                                   different_additional_fields=True,
                                                                   *args, **kwargs)})
             else:
-                all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
+                all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
         return all_reports
 
 
@@ -189,6 +189,6 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
             self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
 
         for report_name in self.report_names:
-            all_reports.append({report_name: self._get_report(api_report_name=report_name, *args, **kwargs)})
+            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
 
         return all_reports
