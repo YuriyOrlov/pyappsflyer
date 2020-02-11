@@ -58,7 +58,7 @@ def get_random_filename(filename: str = None,
 
     components = []
     if folder:
-        components.append(folder)
+        components.append(f'{FILES_DIR}{plt_folder_delimiter.get(PLATFORM)}{folder}')
     else:
         components.append(FILES_DIR)
 
@@ -160,7 +160,6 @@ class BaseAppsFlyer:
                default: utf-8-sig
         :param kwargs: additional params for adding something in request URL
                        or if CSV must return reader as a dict and not as row by row.
-        :return:
         """
         url = self._prepare_url(**kwargs)
         self.logger.debug(url)
@@ -172,8 +171,8 @@ class BaseAppsFlyer:
             with closing(requests.get(url.url, stream=True)) as receiver:
                 reader = csv.DictReader(iterdecode(receiver.iter_lines(),
                                                    encoding=encoding))
-            # Converts received CSV into list
-            result = self._read_csv_file(reader=reader, result=result)
+                # Converts received CSV into list
+                result = self._read_csv_file(reader=reader, result=result)
 
             if kwargs.get('to_csv'):
                 self.write_file(result, filename)

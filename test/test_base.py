@@ -4,15 +4,27 @@ import pytest
 
 from pyappsflyer.base import BaseAppsFlyer
 
+from unittest.mock import patch, MagicMock
+
 from pyappsflyer.exceptions import PyAFError, PyAFValidationError,\
     PyAFCommunicationError, PyAFUnknownError, WebServerError,\
     AuthenticationError, PyAFProcessingError
 from pyappsflyer.base import get_random_filename
 
+from unittest.mock import patch
+from io import StringIO
+
 sample_report_names = [
         'partners_report', 'partners_by_date_report',
         'daily_report', 'geo_report', 'geo_by_date_report'
     ]
+
+csv_example = StringIO("""
+    test_column1,test_column2,test_column3
+    Row 1 col 1,Row 1 col 2,Row 1 col 3
+    Row 2 col 1,Row 2 col 2,Row 2 col 3
+    Row 3 col 1,Row 3 col 2,Row 3 col 3
+""")
 
 
 @pytest.fixture
@@ -87,3 +99,10 @@ class TestBase:
         filename_w_path = get_random_filename(filename=test_filename)
         assert 'csv' in filename_w_path
         assert '.ggg' not in filename_w_path
+
+    # @patch('requests.get', MagicMock(return_value=csv_example))
+    # def test_receiving_csv_file(self, baseappclass: BaseAppsFlyer):
+    #     baseappclass.api_report_name = 'geo_report'
+    #     result = baseappclass._get_csv()
+    #
+    #     assert result == ''
