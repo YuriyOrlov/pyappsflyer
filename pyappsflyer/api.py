@@ -22,8 +22,7 @@ class PerformanceReport(BaseAppsFlyer):
                     from_date=None,
                     to_date=None,
                     timezone=DEFAULT_TIMEZONE,
-                    api_report_name="partners_report",
-                    return_dict=True):
+                    api_report_name="partners_report"):
         """
         Method to receive one performance report.
         If dates are not presented default number of days will be used.
@@ -32,7 +31,6 @@ class PerformanceReport(BaseAppsFlyer):
         :param to_date: at what date to end, date format - YYYY-MM-DD
         :param timezone: timezone for api request, default - Europe/Moscow
         :param api_report_name: name of the performance report according to api documentation
-        :param return_dict: return answer in dict or list
         :return: Ordered dictionary created from CSV file or list created from CSV file
         """
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
@@ -43,8 +41,8 @@ class PerformanceReport(BaseAppsFlyer):
 
         return self._get_csv(request_args={"from": from_date,
                                            "to": to_date,
-                                           "timezone": timezone},
-                             return_dict=return_dict)
+                                           "timezone": timezone}
+                             )
 
     def get_reports(self,
                     exclude_reports=None,
@@ -97,7 +95,6 @@ class RawDataReport(BaseAppsFlyer):
                     to_date=None,
                     timezone=DEFAULT_TIMEZONE,
                     api_report_name="installs_report",
-                    return_dict=True,
                     retargeting=False,
                     different_additional_fields=False):
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
@@ -117,8 +114,7 @@ class RawDataReport(BaseAppsFlyer):
         if retargeting:
             request_args.update({"reattr": "true"})
 
-        return self._get_csv(request_args=request_args,
-                             return_dict=return_dict)
+        return self._get_csv(request_args=request_args)
 
     def get_reports(self,
                     exclude_reports: Optional[List[str]] = None,
@@ -169,8 +165,7 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                     from_date=None,
                     to_date=None,
                     timezone=DEFAULT_TIMEZONE,
-                    api_report_name="invalid_installs_report",
-                    return_dict=True):
+                    api_report_name="invalid_installs_report"):
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
@@ -182,8 +177,7 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                         "timezone": timezone,
                         "additional_fields": ",".join(self.additional_fields)}
 
-        return self._get_csv(request_args=request_args,
-                             return_dict=return_dict)
+        return self._get_csv(request_args=request_args)
 
     def get_reports(self,
                     exclude_reports: Optional[list] = None,

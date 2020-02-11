@@ -1,10 +1,12 @@
 import os
-import datetime
 import logging
 import csv
 import json
 import requests
 
+from datetime import datetime as dt
+from datetime import timedelta as tdl
+from datetime import date
 from typing import Optional, Union, List, Tuple
 from uuid import uuid4
 from contextlib import closing
@@ -13,29 +15,56 @@ from furl import furl
 
 from .settings import DEFAULT_DAYS_NUMBER,\
     DEFAULT_CSV_DELIMETER, DEFAULT_CSV_QUOTECHAR, DEFAULT_CSV_ENCODING,\
-    APP_FLYER_HOST, APP_FLYER_API_KEY
+    APP_FLYER_HOST, APP_FLYER_API_KEY, FILES_DIR, PLATFORM
 
-from .exceptions import PyAFError, PyAFValidationError,\
-    PyAFCommunicationError, PyAFUnknownError, WebServerError,\
+from .exceptions import PyAFValidationError,\
+    PyAFCommunicationError, PyAFUnknownError,\
     AuthenticationError, PyAFProcessingError
 
 
-def get_random_filename(filename=None,
-                        folder=None,
-                        add_current_date=True,
-                        ext='csv'):
-    if filename:
-        _, ext = os.path.splitext(filename)
-        filename = f"{str(uuid4())}{ext}"
-    else:
-        filename = f"{str(uuid4())}{ext}"
+def get_random_filename(filename: str = None,
+                        folder: str = None,
+                        add_current_date: bool = True,
+                        ext: str = 'csv',
+                        possible_ext: Tuple[str] = ('csv', 'json')
+                        ) -> str:
+    """
+    Function returns full path for saving file.
 
-    components = list()
+    :param filename: an old filename if provided, else there will be an UUID4 as a filenamename
+           default: None
+    :param folder: path to a folder, else the base folder will be used
+           default: None
+    :param add_current_date: current YYYY/MM/DD will be added as a folder, if needed
+           default: True
+    :param ext: file extension with which to save
+    :param possible_ext: possible file extensions
+    :return:
+    """
+    if ext not in possible_ext:
+        ext = 'csv'
+
+    # "Date as folder" delimiter according to the current user's system
+    plt_folder_delimiter = {
+        'Windows': '\\',
+        'Linux': '/'
+    }
+
+    if filename:
+        filename, _ = os.path.splitext(filename)
+        filename = f"{filename}.{ext}"
+    else:
+        filename = f"{str(uuid4())}.{ext}"
+
+    components = []
     if folder:
-        components = components.append(folder)
+        components.append(folder)
+    else:
+        components.append(FILES_DIR)
 
     if add_current_date:
-        components.append(datetime.date.today().strftime("%Y/%m/%d"))
+        str_date = f"%Y{plt_folder_delimiter.get(PLATFORM, '/')}%m{plt_folder_delimiter.get(PLATFORM, '/')}%d"
+        components.append(date.today().strftime(str_date))
     components.append(filename)
 
     return os.path.join(*components)
@@ -89,7 +118,8 @@ class BaseAppsFlyer:
                        reader: Union[csv.reader, csv.DictReader],
                        result: list) -> list:
         """
-        Method reads CSV files and saves them to JSON or return parsed data.
+        Method reads CSV file, checks if something present in request answer
+        and returns parsed data.
 
         :param reader: file reader
         :param result: result for elements in file
@@ -98,6 +128,8 @@ class BaseAppsFlyer:
 
         for num, record in enumerate(reader):
             if num == 0:
+                # Checks the first row if there no problem in request answer
+                # because AppsFlyer could answer with 200 OK and without any CSV data.
                 self.validate_csv_request_answer(record)
             result.append(record)
         return result
@@ -119,33 +151,35 @@ class BaseAppsFlyer:
         raise PyAFCommunicationError("Data was not received")
 
     def _get_csv(self,
-                 delimeter=DEFAULT_CSV_DELIMETER,
-                 quotechar=DEFAULT_CSV_QUOTECHAR,
                  encoding=DEFAULT_CSV_ENCODING,
-                 filename=None,
-                 **kwargs):
+                 **kwargs) -> list:
+        """
+        Method receives CSV file in a stream parses it and passes further.
+        If there is a need to save those files in CSV or JSON it saves them
+        :param encoding: CSV encoding
+               default: utf-8-sig
+        :param kwargs: additional params for adding something in request URL
+                       or if CSV must return reader as a dict and not as row by row.
+        :return:
+        """
         url = self._prepare_url(**kwargs)
         self.logger.debug(url)
-        if not filename:
-            filename = get_random_filename(filename=kwargs.get('filename'))
+        filename = get_random_filename(folder='received_files')
         result = []
 
         try:
+            # Reads all stream from AppsFlyer API
             with closing(requests.get(url.url, stream=True)) as receiver:
-                if kwargs.get('return_dict'):
-                    reader = csv.DictReader(iterdecode(receiver.iter_lines(),
-                                                       encoding=encoding))
-                else:
-                    reader = csv.reader(iterdecode(receiver.iter_lines(),
-                                                   encoding=encoding),
-                                                   delimiter=delimeter,
-                                                   quotechar=quotechar)
-            result = self._read_csv_file(reader=reader,
-                                         result=result)
+                reader = csv.DictReader(iterdecode(receiver.iter_lines(),
+                                                   encoding=encoding))
+            # Converts received CSV into list
+            result = self._read_csv_file(reader=reader, result=result)
+
             if kwargs.get('to_csv'):
                 self.write_file(result, filename)
             elif kwargs.get('to_json'):
                 self.write_file(result, filename, 'json')
+
         except Exception as err:
             raise PyAFProcessingError(
                 'Error while processing file'
@@ -181,7 +215,7 @@ class BaseAppsFlyer:
         :param value: date as a string
         """
         try:
-            datetime.datetime.strptime(value, "%Y-%m-%d")
+            dt.strptime(value, "%Y-%m-%d")
         except ValueError as err:
             raise PyAFValidationError(
                 'Date format is invalid'
@@ -213,8 +247,8 @@ class BaseAppsFlyer:
         Method returns default values for dates if no dates were transferred.
         :return: tuple with two dates
         """
-        from_date = (datetime.datetime.now() - datetime.timedelta(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
-        to_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        from_date = (dt.now() - tdl(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
+        to_date = dt.now().strftime("%Y-%m-%d")
         return from_date, to_date
 
     @staticmethod
@@ -264,8 +298,6 @@ class BaseAppsFlyer:
         :param filename: file name
         :param extension: file's extension
         """
-        if not filename:
-            filename = get_random_filename(filename, ext=extension)
         with open(filename, 'w+') as file:
             if extension == 'json':
                 json.dump(result, file)
