@@ -7,7 +7,6 @@ class PyAFValidationError(PyAFError):
     Error for wrong data passed.
     """
 
-
 class PyAFCommunicationError(PyAFError):
     """
     Error for different communication errors

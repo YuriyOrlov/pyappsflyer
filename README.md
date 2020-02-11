@@ -1,13 +1,13 @@
 # PyAppsFlyer
 
-Unofficial python erapper for AppsFlyer API.
+Unofficial python wrapper for AppsFlyer API.
 
 https://www.appsflyer.com/
 
 ---
 
 For working with this application you need to receive API_KEY in your
-personal office on site.
+personal account on website.
 
 
 #### Getting performance data report
@@ -32,7 +32,7 @@ report = PerformanceReport(api_key='your_api_key',
                            application_name="your_application_name",
     )
     
-report.get_report('daily_report')
+report.get_report(api_report_name='daily_report')
 ```
 If report is not listed in available report you will be notified with an Exception.
 All possible report are listed on application site. Please refer to them.
@@ -46,7 +46,6 @@ All method parameters:
 * to_date - at what date to end, date format - YYYY-MM-DD
 * timezone - timezone for api request, default - Europe/Moscow
 * api_report_name - name of the performance report according to api documentation, string
-* return_dict: return answer in dict or list, boolean
 
 If you want to receive all possible reports, use another method.
 

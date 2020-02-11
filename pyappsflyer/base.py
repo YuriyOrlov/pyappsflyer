@@ -1,41 +1,71 @@
 import os
-import datetime
 import logging
 import csv
 import json
 import requests
 
-from typing import Optional, Union, List, Tuple
+
+from abc import abstractmethod
+from datetime import datetime as dt
+from datetime import timedelta as tdl
+from datetime import date
+from typing import Optional, Union, List, Tuple, Generator
 from uuid import uuid4
 from contextlib import closing
 from codecs import iterdecode
 from furl import furl
 
-from .settings import DEFAULT_DAYS_NUMBER,\
-    DEFAULT_CSV_DELIMETER, DEFAULT_CSV_QUOTECHAR, DEFAULT_CSV_ENCODING,\
-    APP_FLYER_HOST, APP_FLYER_API_KEY
+from .settings import DEFAULT_DAYS_NUMBER, DEFAULT_CSV_ENCODING,\
+    APP_FLYER_HOST, APP_FLYER_API_KEY, FILES_DIR, PLATFORM
 
-from .exceptions import PyAFError, PyAFValidationError,\
-    PyAFCommunicationError, PyAFUnknownError, WebServerError,\
+from .exceptions import PyAFValidationError,\
+    PyAFCommunicationError, PyAFUnknownError,\
     AuthenticationError, PyAFProcessingError
 
 
-def get_random_filename(filename=None,
-                        folder=None,
-                        add_current_date=True,
-                        ext='csv'):
-    if filename:
-        _, ext = os.path.splitext(filename)
-        filename = f"{str(uuid4())}{ext}"
-    else:
-        filename = f"{str(uuid4())}{ext}"
+def get_random_filename(filename: str = None,
+                        folder: str = None,
+                        add_current_date: bool = True,
+                        ext: str = 'csv',
+                        possible_ext: Tuple[str] = ('csv', 'json')
+                        ) -> str:
+    """
+    Function returns full path for saving file.
 
-    components = list()
+    :param filename: an old filename if provided, else there will be an UUID4 as a filenamename
+           default: None
+    :param folder: path to a folder, else the base folder will be used
+           default: None
+    :param add_current_date: current YYYY/MM/DD will be added as a folder, if needed
+           default: True
+    :param ext: file extension with which to save
+    :param possible_ext: possible file extensions
+    :return:
+    """
+    if ext not in possible_ext:
+        ext = 'csv'
+
+    # "Date as folder" delimiter according to the current user's system
+    plt_folder_delimiter = {
+        'Windows': '\\',
+        'Linux': '/'
+    }
+
+    if filename:
+        filename, _ = os.path.splitext(filename)
+        filename = f"{filename}.{ext}"
+    else:
+        filename = f"{str(uuid4())}.{ext}"
+
+    components = []
     if folder:
-        components = components.append(folder)
+        components.append(f'{FILES_DIR}{plt_folder_delimiter.get(PLATFORM)}{folder}')
+    else:
+        components.append(FILES_DIR)
 
     if add_current_date:
-        components.append(datetime.date.today().strftime("%Y/%m/%d"))
+        str_date = f"%Y{plt_folder_delimiter.get(PLATFORM, '/')}%m{plt_folder_delimiter.get(PLATFORM, '/')}%d"
+        components.append(date.today().strftime(str_date))
     components.append(filename)
 
     return os.path.join(*components)
@@ -48,7 +78,7 @@ class BaseAppsFlyer:
 
     __slots__ = ('logger', 'api_url', 'api_action',
                  'application_name', 'api_report_name',
-                 'api_version', 'api_key')
+                 'api_version', 'api_key', 'report_names')
 
     def __init__(self,
                  application_name: str,
@@ -62,6 +92,7 @@ class BaseAppsFlyer:
         self.api_report_name = None
         self.api_version = 'v5'
         self.api_key = api_key or APP_FLYER_API_KEY
+        self.report_names = None
 
     def _prepare_url(self, **kwargs) -> furl:
         """
@@ -89,7 +120,8 @@ class BaseAppsFlyer:
                        reader: Union[csv.reader, csv.DictReader],
                        result: list) -> list:
         """
-        Method reads CSV files and saves them to JSON or return parsed data.
+        Method reads CSV file, checks if something present in request answer
+        and returns parsed data.
 
         :param reader: file reader
         :param result: result for elements in file
@@ -98,6 +130,8 @@ class BaseAppsFlyer:
 
         for num, record in enumerate(reader):
             if num == 0:
+                # Checks the first row if there no problem in request answer
+                # because AppsFlyer could answer with 200 OK and without any CSV data.
                 self.validate_csv_request_answer(record)
             result.append(record)
         return result
@@ -119,33 +153,35 @@ class BaseAppsFlyer:
         raise PyAFCommunicationError("Data was not received")
 
     def _get_csv(self,
-                 delimeter=DEFAULT_CSV_DELIMETER,
-                 quotechar=DEFAULT_CSV_QUOTECHAR,
                  encoding=DEFAULT_CSV_ENCODING,
-                 filename=None,
-                 **kwargs):
+                 **kwargs) -> list:
+        """
+        Method receives CSV file in a stream parses it and passes further.
+        If there is a need to save those files in CSV or JSON it saves them
+        :param encoding: CSV encoding
+               default: utf-8-sig
+        :param kwargs: additional params for adding something in request URL
+                       or if CSV must return reader as a dict and not as row by row.
+        """
         url = self._prepare_url(**kwargs)
         self.logger.debug(url)
-        if not filename:
-            filename = get_random_filename(filename=kwargs.get('filename'))
+        filename = get_random_filename(folder='received_files')
         result = []
 
         try:
+            # Reads all stream from AppsFlyer API
             with closing(requests.get(url.url, stream=True)) as receiver:
-                if kwargs.get('return_dict'):
-                    reader = csv.DictReader(iterdecode(receiver.iter_lines(),
-                                                       encoding=encoding))
-                else:
-                    reader = csv.reader(iterdecode(receiver.iter_lines(),
-                                                   encoding=encoding),
-                                                   delimiter=delimeter,
-                                                   quotechar=quotechar)
-            result = self._read_csv_file(reader=reader,
-                                         result=result)
-            if kwargs.get('to_csv'):
+                reader = csv.DictReader(iterdecode(receiver.iter_lines(),
+                                                   encoding=encoding))
+                # Converts received CSV into list
+                result = self._read_csv_file(reader=reader, result=result)
+
+            # Saves file copies in different formats if needed
+            if kwargs['copy_to_csv']:
                 self.write_file(result, filename)
-            elif kwargs.get('to_json'):
+            if kwargs['copy_to_json']:
                 self.write_file(result, filename, 'json')
+
         except Exception as err:
             raise PyAFProcessingError(
                 'Error while processing file'
@@ -153,35 +189,53 @@ class BaseAppsFlyer:
         finally:
             return result
 
-    def get_report(self):
+    def get_report(self, *args, **kwargs):
         """
         Main method for receiving reports.
         """
         try:
-            self._get_report()
+            return self._get_report(*args, **kwargs)
         except Exception as err:
             raise PyAFUnknownError(
                 'Unknown error'
             ) from err
 
-    def _get_report(self):
+    @abstractmethod
+    def _get_report(self, *args, **kwargs):
         """
-        Method to be reassgned in child classes.
-        :return:
+        Method to receive base report.
+        Must be assigned in child classes.
         """
-        pass
+        raise NotImplementedError
 
-    def get_reports(self):
-        pass
+    def get_reports(self,
+                    exclude_reports: Optional[Tuple[str, ...]] = None,
+                    *args,
+                    **kwargs) -> list:
+        """
+        Method to receive all reports
+
+        :param exclude_reports: an array with names of reports needs to be excluded in string format
+        :return: list with results
+        """
+        all_reports = []
+
+        if exclude_reports:
+            self.report_names = self.do_reports_exclusion(self.report_names, exclude_reports)
+
+        for report_name in self.report_names:
+            all_reports.append({report_name: self.get_report(api_report_name=report_name, *args, **kwargs)})
+
+        return all_reports
 
     def validate_date_format(self, value: str) -> None:
         """
-        Method checks id data format is invalid.
+        Method checks if data format is invalid.
 
         :param value: date as a string
         """
         try:
-            datetime.datetime.strptime(value, "%Y-%m-%d")
+            dt.strptime(value, "%Y-%m-%d")
         except ValueError as err:
             raise PyAFValidationError(
                 'Date format is invalid'
@@ -191,7 +245,7 @@ class BaseAppsFlyer:
 
     def validate_dates_and_report_names(self,
                                         api_report_name: str,
-                                        allowed_report_names: List[str],
+                                        allowed_report_names: Tuple[str, ...],
                                         from_date: str,
                                         to_date: str) -> None:
         """
@@ -208,17 +262,17 @@ class BaseAppsFlyer:
         self.validate_date_format(to_date)
 
     @staticmethod
-    def get_default_dates() -> Tuple[datetime.datetime, datetime.datetime]:
+    def get_default_dates() -> Tuple[str, str]:
         """
         Method returns default values for dates if no dates were transferred.
         :return: tuple with two dates
         """
-        from_date = (datetime.datetime.now() - datetime.timedelta(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
-        to_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        from_date = (dt.now() - tdl(days=DEFAULT_DAYS_NUMBER)).strftime("%Y-%m-%d")
+        to_date = dt.now().strftime("%Y-%m-%d")
         return from_date, to_date
 
     @staticmethod
-    def do_reports_exclusion(report_names: List[str], exclude_reports: Tuple[str]) -> List[str]:
+    def do_reports_exclusion(report_names: Tuple[str, ...], exclude_reports: Tuple[str, ...]) -> Generator:
         """
         Reports to be excluded, if they are not needed in query to an AppsFlyer API.
 
@@ -226,13 +280,13 @@ class BaseAppsFlyer:
         :param exclude_reports: report names, which must be excluded
         :return: an array of strings with report names
         """
-        return [
+        return (
             report_name for report_name in report_names
             if report_name not in exclude_reports
-        ]
+        )
 
     @staticmethod
-    def validate_report_name(value, report_names: List[str]) -> List[str]:
+    def validate_report_name(value, report_names: Tuple[str, ...]) -> str:
         """
         Method validates that such report is in reports list
         which user could receive.
@@ -264,8 +318,6 @@ class BaseAppsFlyer:
         :param filename: file name
         :param extension: file's extension
         """
-        if not filename:
-            filename = get_random_filename(filename, ext=extension)
         with open(filename, 'w+') as file:
             if extension == 'json':
                 json.dump(result, file)
