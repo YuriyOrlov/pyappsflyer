@@ -1,14 +1,7 @@
-import logging
-
 from typing import Optional, List
-from logging.config import dictConfig
 
 from .base import BaseAppsFlyer
-from .settings import LOGGING, DEFAULT_TIMEZONE
-
-dictConfig(LOGGING)
-
-logger = logging.getLogger(__name__)
+from .settings import DEFAULT_TIMEZONE
 
 
 class PerformanceReport(BaseAppsFlyer):
@@ -19,10 +12,12 @@ class PerformanceReport(BaseAppsFlyer):
     )
 
     def _get_report(self,
-                    from_date=None,
-                    to_date=None,
-                    timezone=DEFAULT_TIMEZONE,
-                    api_report_name="partners_report"):
+                    from_date: Optional = None,
+                    to_date: Optional = None,
+                    timezone: str = DEFAULT_TIMEZONE,
+                    api_report_name: str = "partners_report",
+                    copy_to_csv: bool = False,
+                    copy_to_json: bool = False):
         """
         Method to receive one performance report.
         If dates are not presented default number of days will be used.
@@ -31,7 +26,9 @@ class PerformanceReport(BaseAppsFlyer):
         :param to_date: at what date to end, date format - YYYY-MM-DD
         :param timezone: timezone for api request, default - Europe/Moscow
         :param api_report_name: name of the performance report according to api documentation
-        :return: Ordered dictionary created from CSV file or list created from CSV file
+        :param copy_to_csv: save a .csv file copy
+        :param copy_to_json: save a .json file copy
+        :return: Ordered dictionary created from CSV file
         """
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
@@ -44,11 +41,16 @@ class PerformanceReport(BaseAppsFlyer):
                                            "timezone": timezone})
 
     def get_reports(self,
-                    exclude_reports=None,
+                    exclude_reports: Optional[List[str]] = None,
                     *args,
-                    **kwargs):
+                    **kwargs) -> list:
+        """
+        Method to receive all reports
 
-        all_reports = list()
+        :param exclude_reports: an array with names of reports needs to be excluded in string format
+        :return: list with results
+        """
+        all_reports = []
 
         if exclude_reports:
             self.report_names = self.do_reports_exclusion(self.report_names,
@@ -90,12 +92,29 @@ class RawDataReport(BaseAppsFlyer):
     )
 
     def _get_report(self,
-                    from_date=None,
-                    to_date=None,
-                    timezone=DEFAULT_TIMEZONE,
-                    api_report_name="installs_report",
-                    retargeting=False,
-                    different_additional_fields=False):
+                    from_date: Optional = None,
+                    to_date: Optional = None,
+                    timezone: str = DEFAULT_TIMEZONE,
+                    api_report_name: str = "installs_report",
+                    retargeting: bool = False,
+                    different_additional_fields: bool = False,
+                    copy_to_csv: bool = False,
+                    copy_to_json: bool = False):
+        """
+        Method to receive one performance report.
+        If dates are not presented default number of days will be used.
+
+        :param from_date: from what date to begin, date format - YYYY-MM-DD
+        :param to_date: at what date to end, date format - YYYY-MM-DD
+        :param timezone: timezone for api request, default - Europe/Moscow
+        :param api_report_name: name of the performance report according to api documentation
+        :param retargeting: use retargeting params for reports or not
+                            default: False
+        :param different_additional_fields: fields to add into report, more info in AppsFlyer docs
+        :param copy_to_csv: save a .csv file copy
+        :param copy_to_json: save a .json file copy
+        :return: Ordered dictionary created from CSV file
+        """
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
@@ -120,8 +139,16 @@ class RawDataReport(BaseAppsFlyer):
                     exclude_retargeting_reports: Optional[tuple] = None,
                     *args,
                     **kwargs):
+        """
+        Method to receive all reports
 
-        all_reports = list()
+        :param exclude_reports: an array with names of reports needs to be excluded in string format
+        :param exclude_retargeting_reports:  an array with names of retargeting
+                                             reports needs to be excluded in string format
+        :return: list with results
+        """
+
+        all_reports = []
 
         if exclude_reports:
             self.report_names = self.do_reports_exclusion(self.report_names,
@@ -161,10 +188,24 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
     )
 
     def _get_report(self,
-                    from_date=None,
-                    to_date=None,
-                    timezone=DEFAULT_TIMEZONE,
-                    api_report_name="invalid_installs_report"):
+                    from_date: Optional = None,
+                    to_date: Optional = None,
+                    timezone: str = DEFAULT_TIMEZONE,
+                    api_report_name: str = "invalid_installs_report",
+                    copy_to_csv: bool = False,
+                    copy_to_json: bool = False):
+        """
+        Method to receive one performance report.
+        If dates are not presented default number of days will be used.
+
+        :param from_date: from what date to begin, date format - YYYY-MM-DD
+        :param to_date: at what date to end, date format - YYYY-MM-DD
+        :param timezone: timezone for api request, default - Europe/Moscow
+        :param api_report_name: name of the performance report according to api documentation
+        :param copy_to_csv: save a .csv file copy
+        :param copy_to_json: save a .json file copy
+        :return: Ordered dictionary created from CSV file
+        """
         self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
@@ -182,7 +223,12 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
                     exclude_reports: Optional[list] = None,
                     *args,
                     **kwargs):
+        """
+        Method to receive all reports
 
+        :param exclude_reports: an array with names of reports needs to be excluded in string format
+        :return: list with results
+        """
         all_reports = []
 
         if exclude_reports:
