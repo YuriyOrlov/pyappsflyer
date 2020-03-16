@@ -32,7 +32,6 @@ class PerformanceReport(BaseAppsFlyer):
         :param copy_to_json: save a .json file copy
         :return: Ordered dictionary created from CSV file
         """
-        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:
@@ -81,7 +80,6 @@ class TargetingValidationRulesReport(BaseAppsFlyer):
         :param copy_to_json: save a .json file copy
         :return: Ordered dictionary created from CSV file
         """
-        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:
@@ -153,7 +151,6 @@ class RawDataReport(BaseAppsFlyer):
         :param copy_to_json: save a .json file copy
         :return: Ordered dictionary created from CSV file
         """
-        self.validate_dates_and_report_names(api_report_name, self.report_names, from_date, to_date)
         self.api_report_name = api_report_name
 
         if not from_date or not to_date:

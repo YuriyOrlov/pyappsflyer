@@ -1,5 +1,3 @@
-import os
-import re
 import pytest
 
 from pyappsflyer import PerformanceReport, RawDataReport, TargetingValidationRulesReport

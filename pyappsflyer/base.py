@@ -194,6 +194,10 @@ class BaseAppsFlyer:
         Main method for receiving reports.
         """
         try:
+            self.validate_dates_and_report_names(kwargs['api_report_name'],
+                                                 self.report_names,
+                                                 kwargs['from_date'],
+                                                 kwargs['to_date'])
             return self._get_report(*args, **kwargs)
         except Exception as err:
             raise PyAFUnknownError(

@@ -4,13 +4,8 @@ import pytest
 
 from pyappsflyer import BaseAppsFlyer, get_random_filename
 
-from unittest.mock import patch, MagicMock
+from pyappsflyer.exceptions import PyAFValidationError
 
-from pyappsflyer.exceptions import PyAFError, PyAFValidationError,\
-    PyAFCommunicationError, PyAFUnknownError, WebServerError,\
-    AuthenticationError, PyAFProcessingError
-
-from unittest.mock import patch
 from io import StringIO
 
 sample_report_names = (
@@ -104,10 +99,3 @@ class TestBase:
         result_gen = baseappclass.do_reports_exclusion(sample_report_names, report_names_to_exclude)
 
         assert len(list(result_gen)) == 3
-
-    # @patch('requests.get', MagicMock(return_value=csv_example))
-    # def test_receiving_csv_file(self, baseappclass: BaseAppsFlyer):
-    #     baseappclass.api_report_name = 'geo_report'
-    #     result = baseappclass._get_csv()
-    #
-    #     assert result == ''
