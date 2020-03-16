@@ -1,8 +1,11 @@
 import os
-import sys
 import environs
 
+from platform import system
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILES_DIR = os.path.abspath(f'{BASE_DIR}/../')
+PLATFORM = system()
 
 # Environment variables, partly taken from .env
 env = environs.Env()
@@ -34,7 +37,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'level': 'DEBUG',
             'formatter': 'simple',
-            'stream': sys.stdout,
+            'stream': 'ext://sys.stdout'
         },
     },
     'loggers': {
