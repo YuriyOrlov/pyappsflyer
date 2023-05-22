@@ -16,7 +16,7 @@ setup(name='pyappsflyer',
       install_requires=[
           'furl==2.0.0',
           'environs==4.2.0',
-          'requests==2.22.0',
+          'requests==2.31.0',
           'xmltodict==0.12.0',
           'pytest==5.3.5'
       ],
